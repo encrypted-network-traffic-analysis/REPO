@@ -9,10 +9,10 @@ data=json.load(fr)
 #print(data)
 #js=json.dumps(json.load(data))
 
-dic={}
+dic_begin={}
+dic_end={}
 for v in data: #遍历数据报
     #print(v)
-    time=v['_source']['layers']['frame']['frame.time_epoch']
     if 'ip.src' in v['_source']['layers']['ip']:
         ip_src=v['_source']['layers']['ip']['ip.src']
     if 'ip.dst' in v['_source']['layers']['ip']:
@@ -29,17 +29,23 @@ for v in data: #遍历数据报
         tcp_dstport=v['_source']['layers']['icmp']['tcp']['tcp.dstport']
     if ip_src<=ip_dst:
         if tcp_dstport<=tcp_srcport:
-            HASH=hash(ip_src+ip_dst+tcp_dstport+tcp_srcport)
+            HASH=ip_src+' '+ip_dst+' '+tcp_dstport+' '+tcp_srcport
         if tcp_dstport>tcp_srcport:
-            HASH=hash(ip_src+ip_dst+tcp_srcport+tcp_dstport)
-    if ip_src>ip_dst:
+            HASH=ip_src+' '+ip_dst+' '+tcp_srcport+' '+tcp_dstport
+    elif ip_src>ip_dst:
         if tcp_dstport<=tcp_srcport:
-            HASH=hash(ip_dst+ip_src+tcp_dstport+tcp_srcport)
+            HASH=ip_dst+' '+ip_src+' '+tcp_dstport+' '+tcp_srcport
         if tcp_dstport>tcp_srcport:
-            HASH=hash(ip_dst+ip_src+tcp_srcport+tcp_dstport)
+            HASH=ip_dst+' '+ip_src+' '+tcp_srcport+' '+tcp_dstport
     time=v['_source']['layers']['frame']['frame.time_epoch']
-    dic[HASH]=time
-    #print(dic[HASH])
-    for key in dic.keys():
-        print(key)
-        print(dic[key],"\n")
+    if HASH in dic_begin:
+        dic_end[HASH]=time
+    else:
+        dic_end[HASH]=time
+        dic_begin[HASH]=time
+
+fw=open('result.txt','w+',encoding='utf-8')
+for key in dic_begin.keys():
+    print('key：'+key+' '+'begin:'+dic_begin[key]+' '+'end:'+dic_end[key]+"\n")
+    fw.write('key：'+key+' '+'begin:'+dic_begin[key]+' '+'end:'+dic_end[key]+"\n")
+fw.close()
