@@ -6,17 +6,22 @@ import string as string
 
 dic_begin = {}
 dic_end = {}
+dic_len = {}
 while 1:
     from scapy.all import *
-    dpkt  = sniff(count = 100)
+    dpkt = sniff(count=100)
     pktdump = PcapWriter("demo.pcap", append=True, sync=True)
     pktdump.write(dpkt)
     pktdump.close()
     #packets = rdpcap("demo.pcap")
+    # type(dpkt)
 
+    lenI=0
     for data in dpkt:
         timeI = data.time
         time = str(timeI)
+        lenI += data.len
+        len = str(lenI)
         if data.haslayer("IP"):
             ip_srcI = data["IP"].src
             ip_dstI = data["IP"].dst
@@ -60,15 +65,19 @@ while 1:
                         HASH = ip_dst+' '+ip_src+' '+tcp_dstport+' '+tcp_srcport+' UDP'
                     if tcp_dstport > tcp_srcport:
                         HASH = ip_dst+' '+ip_src+' '+tcp_srcport+' '+tcp_dstport+' UDP'
-        if HASH in dic_begin:
-            dic_end[HASH] = time
-        else:
-            dic_end[HASH] = time
-            dic_begin[HASH] = time
-    fw = open('result.txt', 'w+', encoding='utf-8')
-    for key in dic_begin.keys():
-        print('key：'+str(key)+' '+'begin:' +
-              str(dic_begin[key])+' '+'end:'+str(dic_end[key])+"\n")
-        fw.write('key：'+str(key)+' '+'begin:' +
-                 str(dic_begin[key])+' '+'end:'+str(dic_end[key])+"\n")
-    fw.close()
+            if HASH in dic_begin:
+                dic_end[HASH] = time
+            else:
+                dic_end[HASH] = time
+                dic_begin[HASH] = time
+            dic_len[HASH] = len
+        fw = open('result.txt', 'w+', encoding='utf-8')
+        for key in dic_begin.keys():
+            print('key：'+str(key)+' '+'begin:' +
+                  str(dic_begin[key])+' '+'end:'+str(dic_end[key])+' '+'len:'+str(dic_len[key])+"\n")
+            fw.write('key：'+str(key)+' '+'begin:' +
+                     str(dic_begin[key])+' '+'end:'+str(dic_end[key])+' '+'len:'+str(dic_len[key])+"\n")
+        fw.close()
+    dic_begin.clear()
+    dic_end.clear()
+    dic_len.clear()
