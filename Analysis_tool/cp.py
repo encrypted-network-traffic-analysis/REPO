@@ -8,9 +8,8 @@ dic_begin = {}
 dic_end = {}
 dic_len = {}
 while 1:
-    from scapy.all import *
-    dpkt  = sniff(count = 1000)
-    pktdump = PcapWriter("demo.pcap", append=True, sync=True)
+    dpkt  = scapy.all.sniff(count = 1000)
+    pktdump = scapy.all.PcapWriter("demo.pcap", append=True, sync=True)
     pktdump.write(dpkt)
     pktdump.close()
     #packets = rdpcap("demo.pcap")
