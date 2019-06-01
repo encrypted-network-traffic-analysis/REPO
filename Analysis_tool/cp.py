@@ -6,8 +6,11 @@ import string as string
 import csv
 from collections import defaultdict
 
-
+dic = defaultdict(list)
+f_time=""
 def cp(N):
+    flag=True
+    global dic
     while N > 0:
         dpkt = scapy.all.sniff(count=100)
         #pktdump = scapy.all.PcapWriter("demo.pcap", append=True, sync=True)
@@ -15,8 +18,14 @@ def cp(N):
         # pktdump.close()
         lenI = 0
         for data in dpkt:
-            timeI = data.time
-            time = str(timeI)
+            if flag:
+                timeI = data.time
+                time = str(timeI)
+                f_time=time
+                flag=False
+            else:
+                timeI = data.time-float(f_time)
+                time = str(timeI)
             if not hasattr(data, 'len'):
                 lenI = 0
             else:
@@ -57,6 +66,7 @@ def cp(N):
                         if tcp_dstport > tcp_srcport:
                             HASH = ip_dst+' '+ip_src+' '+tcp_srcport+' '+tcp_dstport+' TCP'
                 elif data.haslayer("UDP"):
+                    continue
                     if ip_src <= ip_dst:
                         if tcp_dstport <= tcp_srcport:
                             HASH = ip_src+' '+ip_dst+' '+tcp_dstport+' '+tcp_srcport+' UDP'
@@ -88,11 +98,11 @@ def cp(N):
                      str(dic[key])+' '+'end:'+str(dic[key])+' '+'len:'+str(dic[key])+' count:'+str(dic[key])+"\n")
         fw.close()
         csvF.close()
+        dic.clear()
         N -= 1
 
 
 if __name__ == "__main__":
-    dic = defaultdict(list)
     csvF = open('csvF.csv', 'w+', newline="")
     csvwriter = csv.writer(csvF)
     csvwriter.writerow(['key', 'begin', 'end', 'size', 'packages'])
